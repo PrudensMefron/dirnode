@@ -33,9 +33,16 @@ function listDirContents(filepath) {
             // read the directory
             const files = yield fs.promises.readdir(filepath);
             const detailedFilesPromises = files.map((file) => __awaiter(this, void 0, void 0, function* () {
-                let fileDetails = yield fs.promises.lstat(path.resolve(filepath, file));
-                const { size, birthtime } = fileDetails;
-                return { filename: file, size: formatFileSize(size), created_at: birthtime };
+                const fileDetails = yield fs.promises.lstat(path.resolve(filepath, file));
+                if (fileDetails.isDirectory()) {
+                    // if its a directory, gets its size
+                    const dirSize = yield getDirSize(path.resolve(filepath, file));
+                    return { filename: file, size: formatFileSize(dirSize), created_at: fileDetails.birthtime };
+                }
+                else {
+                    // if its a file, just get its size
+                    return { filename: file, size: formatFileSize(fileDetails.size), created_at: fileDetails.birthtime };
+                }
             }));
             // display the data
             const detailedFiles = yield Promise.all(detailedFilesPromises);
@@ -73,7 +80,27 @@ function formatFileSize(size) {
         return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
     }
 }
-// Check the option which is selected
+// Helper function to get the total size of a directory
+function getDirSize(dirpath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const files = yield fs.promises.readdir(dirpath);
+        let totalSize = 0;
+        for (const file of files) {
+            const filepath = path.resolve(dirpath, file);
+            const fileDetails = yield fs.promises.lstat(filepath);
+            if (fileDetails.isDirectory()) {
+                // if it's a directory, recursively gets its size
+                totalSize += yield getDirSize(filepath);
+            }
+            else {
+                // if its a file, just add its size
+                totalSize += fileDetails.size;
+            }
+        }
+        return totalSize;
+    });
+}
+// ### Check the option which is selected ###
 // List directory option, -l or --list:
 if (options.list) {
     const filepath = typeof options.list === "string" ? options.list : process.cwd();
