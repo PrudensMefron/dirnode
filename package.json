@@ -1,6 +1,6 @@
 {
   "name": "dirnode",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "bin": {
     "dirnode": "dist/index.js"

@@ -28,9 +28,15 @@ async function listDirContents(filepath: string) {
         // read the directory
         const files = await fs.promises.readdir(filepath);
         const detailedFilesPromises = files.map(async (file: string) => {
-            let fileDetails = await fs.promises.lstat(path.resolve(filepath, file));
-            const {size, birthtime } = fileDetails;
-            return {filename: file, size: formatFileSize(size), created_at: birthtime}
+            const fileDetails = await fs.promises.lstat(path.resolve(filepath, file));
+            if (fileDetails.isDirectory()) {
+                // if its a directory, gets its size
+                const dirSize = await getDirSize(path.resolve(filepath, file));
+                return { filename: file, size: formatFileSize(dirSize), created_at: fileDetails.birthtime };
+            } else {
+                // if its a file, just get its size
+                return { filename: file, size: formatFileSize(fileDetails.size), created_at: fileDetails.birthtime };
+            }
         });
         // display the data
         const detailedFiles = await Promise.all(detailedFilesPromises);
@@ -67,8 +73,25 @@ function formatFileSize(size: number): string {
     }
 }
 
+// Helper function to get the total size of a directory
+async function getDirSize(dirpath: string): Promise<number> {
+    const files = await fs.promises.readdir(dirpath);
+    let totalSize = 0;
+    for (const file of files) {
+        const filepath = path.resolve(dirpath, file);
+        const fileDetails = await fs.promises.lstat(filepath);
+        if (fileDetails.isDirectory()) {
+            // if it's a directory, recursively gets its size
+            totalSize += await getDirSize(filepath);
+        } else {
+            // if its a file, just add its size
+            totalSize += fileDetails.size;
+        }
+    }
+    return totalSize;
+}
 
-// Check the option which is selected
+// ### Check the option which is selected ###
 
 // List directory option, -l or --list:
 if (options.list) {
