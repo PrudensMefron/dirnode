@@ -6,13 +6,18 @@
     "dirnode": "dist/index.js"
   },
   "scripts": {
-    "build": "npx tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx tsc"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli",
+    "npmtool",
+    "dirmanager"
+  ],
+  "author": "Marcelo Galvan", 
   "license": "ISC",
-  "description": "",
+  "repository": "https://github.com/PrudensMefron/dirnode",
+  "homepage": "https://github.com/PrudensMefron/dirnode#readme",
+  "description": "A CLI directory manager written in TypeScript.",
   "dependencies": {
     "commander": "^12.1.0",
     "figlet": "^1.7.0"
