@@ -30,7 +30,7 @@ async function listDirContents(filepath: string) {
         const detailedFilesPromises = files.map(async (file: string) => {
             let fileDetails = await fs.promises.lstat(path.resolve(filepath, file));
             const {size, birthtime } = fileDetails;
-            return {filename: file, "size(KB)": size, created_at: birthtime}
+            return {filename: file, size: formatFileSize(size), created_at: birthtime}
         });
         // display the data
         const detailedFiles = await Promise.all(detailedFilesPromises);
@@ -54,22 +54,36 @@ function createFile(filepath: string) {
     console.log("An empty file has been created successfully!");
 }
 
+// Format of the file sizes
+function formatFileSize(size: number): string {
+    if (size < 1024) {
+        return `${size} bytes`;
+    } else if (size < 1024 * 1024) {
+        return `${(size / 1024).toFixed(2)} KB`;
+    } else if (size < 1024 * 1024 * 1024) {
+        return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+    } else {
+        return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    }
+}
+
+
 // Check the option which is selected
 
 // List directory option, -l or --list:
 if (options.list) {
-    const filepath = typeof options.list === "string" ? options.list : __dirname;
+    const filepath = typeof options.list === "string" ? options.list : process.cwd();
     listDirContents(filepath);
 }
 
 // Create directory option, -m or --makedir:
 if (options.mkdir) {
-    createDir(path.resolve(__dirname, options.mkdir))
+    createDir(path.resolve(process.cwd(), options.mkdir))
 }
 
 // Create file option, -t or --touch:
 if (options.touch) {
-    createFile(path.resolve(__dirname, options.touch))
+    createFile(path.resolve(process.cwd(), options.touch))
 }
 
 // Show the Help page if no options has been chosen
