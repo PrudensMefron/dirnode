@@ -9,8 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const { Command } = require("commander");
+Object.defineProperty(exports, "__esModule", { value: true });
 // imports
+const package_json_1 = require("../package.json");
+const { Command } = require("commander");
 const fs = require("fs");
 const path = require("path");
 const figlet = require("figlet");
@@ -19,7 +21,7 @@ const program = new Command();
 console.log(figlet.textSync("DirNode", { horizontalLayout: "full" }));
 // options
 program
-    .version("1.0.0")
+    .version(package_json_1.version)
     .description("A Command Line Interface for directories management written in TypeScript")
     .option("-l, --list [value]", "List directory contents")
     .option("-m, --mkdir [value]", "Create a new directory")

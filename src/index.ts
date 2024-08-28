@@ -1,19 +1,21 @@
 #! /usr/bin/env node
 
-const { Command } = require("commander");
 // imports
+import { version } from "../package.json";
+const { Command } = require("commander");
 const fs = require("fs");
 const path = require("path");
 const figlet = require("figlet");
 
 const program = new Command();
 
+
 // figlet
 console.log(figlet.textSync("DirNode", { horizontalLayout: "full" }))
 
 // options
 program
-    .version("1.0.0")
+    .version(version)
     .description("A Command Line Interface for directories management written in TypeScript")
     .option("-l, --list [value]", "List directory contents")
     .option("-m, --mkdir [value]", "Create a new directory")
