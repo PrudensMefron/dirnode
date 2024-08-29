@@ -24,17 +24,38 @@ program
     .version(package_json_1.version)
     .description("A Command Line Interface for directories management written in TypeScript")
     .option("-l, --list [value]", "List directory contents")
+    .option("-s, --scan [value]", "Scan a directory, its files and subdirectories")
     .option("-m, --mkdir [value]", "Create a new directory")
     .option("-t, --touch [value]", "Create a new file")
+    .option("-d, --delete [value]", "Delete a directory or file")
     .parse(process.argv);
 const options = program.opts();
-// List directory contents
+// List the directory contents
 function listDirContents(filepath) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // read the directory
-            const files = yield fs.promises.readdir(filepath);
-            const detailedFilesPromises = files.map((file) => __awaiter(this, void 0, void 0, function* () {
+            const listFiles = yield fs.promises.readdir(filepath);
+            const listDetailedFilesPromise = listFiles.map((file) => __awaiter(this, void 0, void 0, function* () {
+                const listFileDetails = yield fs.promises.lstat(path.resolve(filepath, file));
+                return { filename: file, size: formatFileSize(listFileDetails.size), created_at: listFileDetails.birthtime };
+            }));
+            // display the data
+            const listDetailedFiles = yield Promise.all(listDetailedFilesPromise);
+            console.table(listDetailedFiles);
+        }
+        catch (error) {
+            console.error("Error listing directory contents:", error);
+        }
+    });
+}
+// Scan directory contents
+function scanDirContents(filepath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // read the directory
+            const scanFiles = yield fs.promises.readdir(filepath);
+            const scanDetailedFilesPromises = scanFiles.map((file) => __awaiter(this, void 0, void 0, function* () {
                 const fileDetails = yield fs.promises.lstat(path.resolve(filepath, file));
                 if (fileDetails.isDirectory()) {
                     // if its a directory, gets its size
@@ -47,7 +68,7 @@ function listDirContents(filepath) {
                 }
             }));
             // display the data
-            const detailedFiles = yield Promise.all(detailedFilesPromises);
+            const detailedFiles = yield Promise.all(scanDetailedFilesPromises);
             console.table(detailedFiles);
         }
         catch (error) {
@@ -108,6 +129,11 @@ if (options.list) {
     const filepath = typeof options.list === "string" ? options.list : process.cwd();
     listDirContents(filepath);
 }
+// Scan directories, its files and subdirectories, -s or --scan:
+if (options.scan) {
+    const filepath = typeof options.scan === "string" ? options.scan : process.cwd();
+    scanDirContents(filepath);
+}
 // Create directory option, -m or --makedir:
 if (options.mkdir) {
     createDir(path.resolve(process.cwd(), options.mkdir));
@@ -115,6 +141,20 @@ if (options.mkdir) {
 // Create file option, -t or --touch:
 if (options.touch) {
     createFile(path.resolve(process.cwd(), options.touch));
+}
+// Delete a file or repository
+if (options.delete) {
+    const filepath = path.resolve(process.cwd(), options.delete);
+    if (fs.existsSync(filepath)) {
+        if (fs.lstatSync(filepath).isDirectory()) {
+            fs.rmdirSync(filepath, { recursive: true });
+            console.log("The directory has been deleted successfully!");
+        }
+        else {
+            fs.unlinkSync(filepath);
+            console.log("The file has been deleted successfully!");
+        }
+    }
 }
 // Show the Help page if no options has been chosen
 if (!process.argv.slice(2).length) {
